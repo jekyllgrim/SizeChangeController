@@ -1,5 +1,25 @@
 version "4.10"
 
+// Example of activation:
+
+class ShrinkProjectile : DoomImpBall
+{
+	Default
+	{
+		+HITTRACER
+	}
+	States {
+	Death:
+		TNT1 A 0
+		{
+			SizeChangeController.Create(tracer);
+		}
+		goto super::Death;
+	}
+}
+
+// The controller. Call SizeChangeController.Create to start the process
+// Arguments of the function are listed below
 class SizeChangeController : Powerup
 {
 	int waitDuration;
@@ -20,19 +40,12 @@ class SizeChangeController : Powerup
 	double targetsndPitch;
 	double sndPitchStep;
 
-	static void ModifyActorSounds(Actor who, double pitch = -1, double volume = -1)
-	{
-		if (!who)
-			return;
-		for (int i = 0; i <= CHAN_7; i++)
-		{
-			if (volume != -1)
-				who.A_SoundVolume(i, volume);
-			if (pitch != -1)
-				who.A_SoundPitch(i, pitch);
-		}
-	}
-
+	// Main function. Arguments:
+	// victim - pointer to the actor whose size needs changing
+	// fac - the factor of the change (0.15 means reduce to 0.15 of size)
+	// duration - the duration of the shrinking process
+	// waitDuration - the delay after the actor has been shrunk until it grows back up again
+	// allActors - if true, will affect all actors; if false, affects only monsters (false by default)
 	static void Create(Actor victim, double fac = 0.15, int duration = 95, int waitDuration = 175, bool allActors = false)
 	{
 		if (!victim)
@@ -64,6 +77,19 @@ class SizeChangeController : Powerup
 			sc.basesndPitch = 1.0;
 			sc.targetsndPitch = sc.basesndPitch + (1.0 - fac);
 			sc.sndPitchStep = (sc.targetsndPitch - sc.basesndPitch) / sc.effectTics;
+		}
+	}
+
+	static void ModifyActorSounds(Actor who, double pitch = -1, double volume = -1)
+	{
+		if (!who)
+			return;
+		for (int i = 0; i <= CHAN_7; i++)
+		{
+			if (volume != -1)
+				who.A_SoundVolume(i, volume);
+			if (pitch != -1)
+				who.A_SoundPitch(i, pitch);
 		}
 	}
 
@@ -227,21 +253,5 @@ class SizeChangeHandler : EventHandler
 				SizeChangeController.ModifyActorSounds(missile, pitch:sc.basesndPitch);
 			}
 		}
-	}
-}
-
-class ShrinkProjectile : DoomImpBall
-{
-	Default
-	{
-		+HITTRACER
-	}
-	States {
-	Death:
-		TNT1 A 0
-		{
-			SizeChangeController.Create(tracer);
-		}
-		goto super::Death;
 	}
 }
