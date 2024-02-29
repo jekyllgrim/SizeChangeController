@@ -93,9 +93,14 @@ class SizeChangeController : Powerup
 		}
 	}
 
-	void CreateAfterImage(Actor from)
+	void CreateAfterImage()
 	{
-		if (!from)
+		if (Level.maptime % 4 != 0)
+		{
+			return;
+		}
+		Actor img = SizeChageAfterImage.Create(owner);
+		/*if (!from)
 			return;
 
 		Actor img = Spawn(from.GetClass(), (from.pos.xy, floorz - from.height));
@@ -115,8 +120,11 @@ class SizeChangeController : Powerup
 		img.pitch = from.pitch;
 		img.roll = from.roll;
 		img.scale = from.scale;
-		img.translation = from.translation;
-		afterImages.Push(img);
+		img.translation = from.translation;*/
+		if (img)
+		{
+			afterImages.Push(img);
+		}
 	}
 
 	void UpdateAfterImages()
@@ -153,7 +161,7 @@ class SizeChangeController : Powerup
 		return false;
 	}
 
-	override void OnDestroy()
+	/*override void OnDestroy()
 	{
 		for (int i = 0; i < afterImages.size(); i++)
 		{
@@ -163,7 +171,7 @@ class SizeChangeController : Powerup
 				ai.Destroy();
 			}
 		}
-	}
+	}*/
 
 	override void OwnerDied()
 	{}
@@ -182,7 +190,7 @@ class SizeChangeController : Powerup
 		{
 			return;
 		}
-		UpdateAfterImages();
+		//UpdateAfterImages();
 
 		if (effectTics <= 0)
 		{
@@ -205,7 +213,7 @@ class SizeChangeController : Powerup
 		}
 		else
 		{
-			CreateAfterImage(owner);
+			CreateAfterImage();
 			owner.scale += scaleStep;
 			owner.A_SetSize(owner.radius + sizeStep.x, owner.height + sizeStep.y);
 			owner.speed += speedStep;
@@ -253,5 +261,64 @@ class SizeChangeHandler : EventHandler
 				SizeChangeController.ModifyActorSounds(missile, pitch:sc.basesndPitch);
 			}
 		}
+	}
+}
+
+class SizeChageAfterImage : Actor
+{
+	Default
+	{
+		+NOBLOCKMAP
+		+NOINTERACTION
+	}
+
+	static SizeChageAfterImage Create(Actor from) 
+	{
+		if (!from)
+			return null;
+		let to = SizeChageAfterImage(Actor.Spawn('SizeChageAfterImage', from.pos));
+		if (!to)
+			return null;
+		to.sprite = from.sprite;
+		to.frame = from.frame;
+		to.scale = from.scale;
+		to.angle = from.angle;
+		to.pitch = from.pitch;
+		to.roll = from.roll;
+		to.scale = from.scale;
+		to.translation = from.translation;
+		int style = from.GetRenderstyle();
+		if (style == STYLE_Normal)
+		{
+			style = STYLE_Translucent;
+		}
+		to.A_SetRenderStyle(from.alpha*0.75, style);
+		to.bROLLSPRITE = from.bROLLSPRITE;
+		to.bROLLCENTER = from.bROLLCENTER;
+		to.spriteoffset = from.spriteoffset;
+		to.worldOffset = from.worldOffset;
+		to.bSPRITEFLIP = from.bSPRITEFLIP;
+		to.bXFLIP = from.bXFLIP;
+		to.bYFLIP = from.bYFLIP;
+		to.bFORCEYBILLBOARD = from.bFORCEYBILLBOARD;
+		to.bFORCEXYBILLBOARD = from.bFORCEXYBILLBOARD;
+		to.bFLOATBOB = from.bFLOATBOB;
+		to.FloatBobPhase = from.FloatBobPhase;
+		to.FloatBobStrength = from.FloatBobStrength;
+		// these 4 are CRITICALLY important to make sure
+		// the copy also has the same sprite clipping
+		// as the original actor:
+		to.bIsMonster = from.bIsMonster;
+		to.bCorpse = from.bCorpse;
+		to.bFloorclip = from.bFloorclip;
+		to.bSpecialFloorclip = from.bSpecialFloorclip;
+		return to;
+	}
+
+	States
+	{
+	Spawn:
+		#### # 1 A_FadeOut(0.05);
+		loop;
 	}
 }
